@@ -4,7 +4,8 @@
   "description": "A TypeScript Node.js utility which helps with conversion of seconds to other time types. You can also turn get duration in text form.",
   "repository": "https://github.com/JasperLorelai/seconds-util",
   "author": "JasperLorelai",
-  "license": "ISC",
+  "main": "build/Seconds.js",
+  "license": "MIT",
   "scripts": {
     "compile": "tsc"
   },
