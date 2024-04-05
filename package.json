@@ -1,13 +1,15 @@
 {
   "name": "seconds-util",
-  "version": "1.0.0",
-  "description": "A TypeScript Node.js utility which helps with conversion of seconds to other time types. You can also turn get duration in text form.",
+  "version": "1.1.0",
+  "description": "A TypeScript Node.js utility which helps with conversion of seconds to other time types. You can also get duration in text form.",
   "repository": "https://github.com/JasperLorelai/seconds-util",
   "author": "JasperLorelai",
   "main": "build/Seconds.js",
   "license": "MIT",
   "scripts": {
-    "compile": "tsc"
+    "build": "tsc",
+    "prepare": "npm run build",
+    "publish": "npm publish"
   },
   "dependencies": {
     "typescript": "^4.7.4"
