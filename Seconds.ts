@@ -31,25 +31,88 @@ class SecondsIn {
             case TimeTypes.MONTH: return SecondsIn.MONTH;
             case TimeTypes.YEAR: return SecondsIn.YEAR;
         }
-        return 0;
     }
 
 }
 
 export class Seconds {
 
-    private readonly seconds: number;
+    private readonly value: number;
 
     constructor(seconds: number) {
-        this.seconds = seconds;
+        this.value = seconds;
     }
 
     static from(timeType: TimeTypes, amount?: number) {
         return new Seconds(SecondsIn.getSecondsIn(timeType) * (amount || 1));
     }
 
+    static milliseconds(amount: number = 1) {
+        return this.from(TimeTypes.MILLISECOND, amount);
+    }
+
+    static seconds(amount: number = 1) {
+        return new Seconds(amount);
+    }
+
+    static minutes(amount: number = 1) {
+        return this.from(TimeTypes.MILLISECOND, amount);
+    }
+
+    static hours(amount: number = 1) {
+        return this.from(TimeTypes.HOUR, amount);
+    }
+
+    static days(amount: number = 1) {
+        return this.from(TimeTypes.DAY, amount);
+    }
+
+    static weeks(amount: number = 1) {
+        return this.from(TimeTypes.WEEK, amount);
+    }
+
+    static months(amount: number = 1) {
+        return this.from(TimeTypes.MONTH, amount);
+    }
+
+    static years(amount: number = 1) {
+        return this.from(TimeTypes.YEAR, amount);
+    }
+
+    milliseconds() {
+        return this.to(TimeTypes.MILLISECOND);
+    }
+
+    seconds() {
+        return this.to(TimeTypes.SECOND);
+    }
+
+    minutes() {
+        return this.to(TimeTypes.MILLISECOND);
+    }
+
+    hours() {
+        return this.to(TimeTypes.HOUR);
+    }
+
+    days() {
+        return this.to(TimeTypes.DAY);
+    }
+
+    weeks() {
+        return this.to(TimeTypes.WEEK);
+    }
+
+    months() {
+        return this.to(TimeTypes.MONTH);
+    }
+
+    years() {
+        return this.to(TimeTypes.YEAR);
+    }
+
     toDuration() {
-        let tempSec = this.seconds;
+        let tempSec = this.value;
         const elements: string[] = [];
         const lastTypeIndex = Object.keys(TimeTypes).length / 2 - 1;
         for (let i = lastTypeIndex; i >= 0; i--) {
@@ -63,7 +126,7 @@ export class Seconds {
     }
 
     to(timeType: TimeTypes) {
-        return this.seconds / SecondsIn.getSecondsIn(timeType);
+        return timeType === TimeTypes.SECOND ? this.value : this.value / SecondsIn.getSecondsIn(timeType);
     }
 
     toSeconds() {
