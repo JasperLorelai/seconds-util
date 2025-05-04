@@ -56,7 +56,7 @@ export class Seconds {
     }
 
     static minutes(amount: number = 1) {
-        return this.from(TimeTypes.MILLISECOND, amount);
+        return this.from(TimeTypes.MINUTE, amount);
     }
 
     static hours(amount: number = 1) {
@@ -88,7 +88,7 @@ export class Seconds {
     }
 
     minutes() {
-        return this.to(TimeTypes.MILLISECOND);
+        return this.to(TimeTypes.MINUTE);
     }
 
     hours() {
