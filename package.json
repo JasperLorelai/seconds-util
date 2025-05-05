@@ -1,6 +1,6 @@
 {
   "name": "seconds-util",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A TypeScript Node.js utility which helps with conversion of time units. You can also get duration in text form.",
   "repository": "https://github.com/JasperLorelai/seconds-util",
   "author": "JasperLorelai",
