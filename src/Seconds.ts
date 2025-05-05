@@ -55,16 +55,19 @@ class SecondsIn {
 
 }
 
+export default Seconds;
 export class Seconds {
-
-    private readonly value: number;
 
     /**
      * Creates a {@link Seconds} object from the number of seconds passed.
-     * @param seconds amount of seconds
+     * @param value amount of seconds
      */
-    public constructor(seconds: number) {
-        this.value = seconds;
+    public constructor(
+        private readonly value: number
+    ) {}
+
+    private static secFrom(timeType: TimeTypes, amount?: number) {
+        return SecondsIn.MAP[timeType] * (amount || 1);
     }
 
     /**
@@ -80,27 +83,80 @@ export class Seconds {
      * @see Seconds#years
      */
     public static from(timeType: TimeTypes, amount?: number) {
-        return new Seconds(SecondsIn.MAP[timeType] * (amount || 1));
+        return new Seconds(this.secFrom(timeType, amount));
+    }
+
+    /**
+     * Create a {@link SecondsRelative} object from the amount of time passed between now and the passed date (or time until the passed date).
+     * @param date date until/since
+     */
+    public static delta(date: Date) {
+        return this.between(new Date(), date);
+    }
+
+    /**
+     * Create a {@link SecondsRelative} object from the time between the two passed dates.
+     * @param dateA first date
+     * @param dateB second date
+     */
+    public static between(dateA: Date, dateB: Date) {
+        const diff = dateA.getTime() - dateB.getTime();
+        return new SecondsRelative(this.secFrom(TimeTypes.MILLISECOND, diff));
     }
 
     public static milliseconds(amount: number = 1) {
         return this.from(TimeTypes.MILLISECOND, amount);
     }
 
+    /**
+     * @see Seconds#milliseconds
+     */
+    public static ms(amount: number = 1) {
+        return this.milliseconds(amount);
+    }
+
     public static seconds(amount: number = 1) {
         return new Seconds(amount);
+    }
+
+    /**
+     * @see Seconds#seconds
+     */
+    public static s(amount: number = 1) {
+        return this.seconds(amount);
     }
 
     public static minutes(amount: number = 1) {
         return this.from(TimeTypes.MINUTE, amount);
     }
 
+    /**
+     * @see Seconds#minutes
+     */
+    public static min(amount: number = 1) {
+        return this.minutes(amount);
+    }
+
     public static hours(amount: number = 1) {
         return this.from(TimeTypes.HOUR, amount);
     }
 
+    /**
+     * @see Seconds#hours
+     */
+    public static h(amount: number = 1) {
+        return this.hours(amount);
+    }
+
     public static days(amount: number = 1) {
         return this.from(TimeTypes.DAY, amount);
+    }
+
+    /**
+     * @see Seconds#days
+     */
+    public static d(amount: number = 1) {
+        return this.days(amount);
     }
 
     public static weeks(amount: number = 1) {
@@ -115,8 +171,22 @@ export class Seconds {
         return this.from(TimeTypes.YEAR, amount);
     }
 
+    /**
+     * @see Seconds#years
+     */
+    public static y(amount: number = 1) {
+        return this.years(amount);
+    }
+
     public milliseconds() {
         return this.to(TimeTypes.MILLISECOND);
+    }
+
+    /**
+     * @see Seconds#milliseconds
+     */
+    public ms() {
+        return this.milliseconds();
     }
 
     public seconds() {
@@ -127,16 +197,44 @@ export class Seconds {
         return this.seconds();
     }
 
+    /**
+     * @see Seconds#seconds
+     */
+    public s() {
+        return this.seconds();
+    }
+
     public minutes() {
         return this.to(TimeTypes.MINUTE);
+    }
+
+    /**
+     * @see Seconds#minutes
+     */
+    public min() {
+        return this.minutes();
     }
 
     public hours() {
         return this.to(TimeTypes.HOUR);
     }
 
+    /**
+     * @see Seconds#hours
+     */
+    public h() {
+        return this.hours();
+    }
+
     public days() {
         return this.to(TimeTypes.DAY);
+    }
+
+    /**
+     * @see Seconds#days
+     */
+    public d() {
+        return this.days();
     }
 
     public weeks() {
@@ -152,25 +250,25 @@ export class Seconds {
     }
 
     /**
-     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * @see Seconds#years
      */
-    public toDuration() {
-        let sec = Math.abs(this.value);
-        const elements: string[] = [];
+    public y() {
+        return this.years();
+    }
 
-        for (const type of TimeTypesOrdered) {
-            const unitSeconds = SecondsIn.MAP[type];
-            const element = Math.floor(sec / unitSeconds);
-            if (!element) continue;
-            sec %= unitSeconds;
+    /**
+     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * @param disallowedUnits used for rounding
+     */
+    public toDuration(disallowedUnits?: TimeTypes[]) {
+        return this.duration().full(disallowedUnits);
+    }
 
-            const elementName = aliases[type] || `${TimeTypes[type].toLowerCase()}${element === 1 ? "" : "s"}`;
-            elements.push(`${element} ${elementName}`);
-        }
-
-        if (!elements.length) return "now";
-        const duration = elements.join(", ");
-        return this.value < 0 ? `in ${duration}` : `${duration} ago`;
+    /**
+     * Creates a {@link Duration} object from the {@link Seconds} object.
+     */
+    public duration() {
+        return new Duration(this);
     }
 
     /**
@@ -186,6 +284,225 @@ export class Seconds {
      */
     public to(timeType: TimeTypes) {
         return timeType === TimeTypes.SECOND ? this.value : this.value / SecondsIn.MAP[timeType];
+    }
+
+}
+
+class SecondsRelative extends Seconds {
+
+    /**
+     * Creates a duration string from the {@link SecondsRelative} object (e.g. "3 h, 4 min, 5 s ago").
+     * @param disallowedUnits used for rounding
+     * @param capitalised "In x days" (default) or "in x days"
+     */
+    public toDuration(disallowedUnits?: TimeTypes[], capitalised: boolean = true) {
+        return this.duration(capitalised).full(disallowedUnits);
+    }
+
+    /**
+     * Creates a {@link DurationRelative} object from the {@link SecondsRelative} object.
+     * @param capitalised "In x days" (default) or "in x days"
+     */
+    public duration(capitalised: boolean = true): DurationRelative {
+        return new DurationRelative(this, capitalised);
+    }
+
+}
+
+class Duration {
+
+    public constructor(
+        protected readonly value: Seconds
+    ) {}
+
+    /**
+     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * @param disallowedUnits used for rounding
+     * @see Seconds#toDuration
+     */
+    public full(disallowedUnits?: TimeTypes[]) {
+        let sec = Math.abs(this.value.seconds());
+        if (sec === 0) return "0 s";
+
+        const units: TimeTypes[] = [];
+        for (const type of TimeTypesOrdered) {
+            if (disallowedUnits?.includes(type)) continue;
+            units.push(type);
+        }
+
+        const elements: string[] = [];
+        for (let i = 0; i < units.length; i++) {
+            const type = units[i];
+            const unitSeconds = SecondsIn.MAP[type];
+
+            const div = sec / unitSeconds;
+            const value = i === units.length - 1 ? div : Math.floor(div);
+            if (value <= 0) continue;
+            sec %= unitSeconds;
+
+            const unit = aliases[type] || `${TimeTypes[type].toLowerCase()}${value === 1 ? "" : "s"}`;
+            const x = Math.round(value * 100) / 100;
+            elements.push(`${x % 1 ? x.toFixed(2) : x} ${unit}`);
+        }
+
+        return elements.join(", ");
+    }
+
+    /**
+     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * This method stops at "seconds".
+     * @see Duration#full
+     * @see Seconds#toDuration
+     */
+    public seconds() {
+        return this.full([TimeTypes.MILLISECOND]);
+    }
+
+    /**
+     * @see Duration#seconds
+     */
+    public s() {
+        return this.seconds();
+    }
+
+    /**
+     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * This method stops at "minutes".
+     * @see Duration#full
+     * @see Seconds#toDuration
+     */
+    public minutes() {
+        return this.full([
+            TimeTypes.MILLISECOND,
+            TimeTypes.SECOND,
+        ]);
+    }
+
+    /**
+     * @see Duration#minutes
+     */
+    public min() {
+        return this.minutes();
+    }
+
+    /**
+     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * This method stops at "hours".
+     * @see Duration#full
+     * @see Seconds#toDuration
+     */
+    public hours() {
+        return this.full([
+            TimeTypes.MILLISECOND,
+            TimeTypes.SECOND,
+            TimeTypes.MINUTE,
+        ]);
+    }
+
+    /**
+     * @see Duration#hours
+     */
+    public h() {
+        return this.hours();
+    }
+
+    /**
+     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * This method stops at "days".
+     * @see Duration#full
+     * @see Seconds#toDuration
+     */
+    public days() {
+        return this.full([
+            TimeTypes.MILLISECOND,
+            TimeTypes.SECOND,
+            TimeTypes.MINUTE,
+            TimeTypes.HOUR,
+        ]);
+    }
+
+    /**
+     * @see Duration#days
+     */
+    public d() {
+        return this.days();
+    }
+
+    /**
+     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * This method stops at "weeks".
+     * @see Duration#full
+     * @see Seconds#toDuration
+     */
+    public weeks() {
+        return this.full([
+            TimeTypes.MILLISECOND,
+            TimeTypes.SECOND,
+            TimeTypes.MINUTE,
+            TimeTypes.HOUR,
+            TimeTypes.DAY,
+        ]);
+    }
+
+    /**
+     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * This method stops at "months".
+     * @see Duration#full
+     * @see Seconds#toDuration
+     */
+    public months() {
+        return this.full([
+            TimeTypes.MILLISECOND,
+            TimeTypes.SECOND,
+            TimeTypes.MINUTE,
+            TimeTypes.HOUR,
+            TimeTypes.DAY,
+            TimeTypes.WEEK,
+        ]);
+    }
+
+    /**
+     * Creates a duration string from the {@link Seconds} object (e.g. "3 h, 4 min, 5 s ago").
+     * This method stops at "years".
+     * @see Duration#full
+     * @see Seconds#toDuration
+     */
+    public years() {
+        return this.full([
+            TimeTypes.MILLISECOND,
+            TimeTypes.SECOND,
+            TimeTypes.MINUTE,
+            TimeTypes.HOUR,
+            TimeTypes.DAY,
+            TimeTypes.WEEK,
+            TimeTypes.MONTH,
+        ]);
+    }
+
+    /**
+     * @see Duration#years
+     */
+    public y() {
+        return this.years();
+    }
+
+}
+
+class DurationRelative extends Duration {
+
+    public constructor(
+        value: Seconds,
+        private readonly capitalised: boolean = true,
+    ) {
+        super(value);
+    }
+
+    public full(disallowedUnits?: TimeTypes[]) {
+        const sec = this.value.seconds();
+        if (sec === 0) return (this.capitalised ? "N" : "n") + "ow";
+
+        const duration = super.full(disallowedUnits);
+        return sec < 0 ? `${this.capitalised ? "I" : "i"}n ${duration}` : `${duration} ago`;
     }
 
 }
