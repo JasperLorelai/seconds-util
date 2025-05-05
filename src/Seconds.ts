@@ -9,6 +9,28 @@ export enum TimeTypes {
     YEAR,
 }
 
+const TimeTypesOrdered: TimeTypes[] = [
+    TimeTypes.YEAR,
+    TimeTypes.MONTH,
+    TimeTypes.WEEK,
+    TimeTypes.DAY,
+    TimeTypes.HOUR,
+    TimeTypes.MINUTE,
+    TimeTypes.SECOND,
+    TimeTypes.MILLISECOND,
+];
+
+const aliases: Record<TimeTypes, string | undefined> = {
+    [TimeTypes.MILLISECOND]: "ms",
+    [TimeTypes.SECOND]: "s",
+    [TimeTypes.MINUTE]: "min",
+    [TimeTypes.HOUR]: "h",
+    [TimeTypes.DAY]: undefined,
+    [TimeTypes.WEEK]: undefined,
+    [TimeTypes.MONTH]: undefined,
+    [TimeTypes.YEAR]: undefined,
+}
+
 class SecondsIn {
 
     private static readonly MILLISECOND = 1 / 1_000;
@@ -112,17 +134,22 @@ export class Seconds {
     }
 
     toDuration() {
-        let tempSec = this.value;
+        let sec = Math.abs(this.value);
         const elements: string[] = [];
-        const lastTypeIndex = Object.keys(TimeTypes).length / 2 - 1;
-        for (let i = lastTypeIndex; i >= 0; i--) {
-            if (i < lastTypeIndex) tempSec %= Seconds.from(i + 1).toSeconds();
-            const element = Math.floor(tempSec / Seconds.from(i).toSeconds());
+
+        for (const type of TimeTypesOrdered) {
+            const unitSeconds = SecondsIn.getSecondsIn(type);
+            const element = Math.floor(sec / unitSeconds);
             if (!element) continue;
-            const elementName = `${TimeTypes[i].toLowerCase()}${element === 1 ? "" : "s"}`;
+            sec %= unitSeconds;
+
+            const elementName = aliases[type] || `${TimeTypes[type].toLowerCase()}${element === 1 ? "" : "s"}`;
             elements.push(`${element} ${elementName}`);
         }
-        return elements.join(", ");
+
+        if (!elements.length) return "now";
+        const duration = elements.join(", ");
+        return this.value < 0 ? `in ${duration}` : `${duration} ago`;
     }
 
     to(timeType: TimeTypes) {
